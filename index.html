@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energiewende Quiz</title>
+<meta name="description" content="Teste dein Wissen zur Energiewende – interaktives Quiz zu Technologien, Politik, Wärmewende, Rohstoffen und mehr.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0e;
+    --surface: #1a1917;
+    --surface2: #242320;
+    --border: #2e2d28;
+    --text: #e8e4d9;
+    --text-dim: #9e9a8b;
+    --text-muted: #5e5b50;
+    --accent: #d4a843;
+    --accent-dim: #a68532;
+    --green: #4ade80;
+    --green-bg: #132a1c;
+    --green-border: #1e4a2a;
+    --red: #f87171;
+    --red-bg: #2a1313;
+    --red-border: #4a1e1e;
+    --blue: #60a5fa;
+    --amber: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+
+  .app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 48px 0 36px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 1px; background: var(--accent);
+  }
+  .header-label {
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+  }
+  .header h1 {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 34px; line-height: 1.2; color: var(--text);
+  }
+  .header h1 em {
+    font-style: normal; color: var(--accent);
+  }
+  .header-sub {
+    font-size: 14px; color: var(--text-dim); margin-top: 12px; line-height: 1.6;
+  }
+
+  /* ── Start Screen ── */
+  .start-screen { padding-top: 40px; }
+  .category-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    margin: 28px 0;
+  }
+  .cat-chip {
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.2s;
+  }
+  .cat-chip .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .start-btn {
+    display: block; width: 100%; padding: 18px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .start-btn:hover { background: #e0b44e; transform: translateY(-1px); }
+  .start-btn:active { transform: translateY(0); }
+
+  .difficulty-select {
+    display: flex; gap: 8px; margin-bottom: 24px;
+    justify-content: center;
+  }
+  .diff-btn {
+    padding: 10px 22px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border: 2px solid var(--border); background: transparent;
+    color: var(--text-dim); cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .diff-btn.active {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(212, 168, 67, 0.08);
+  }
+  .diff-btn:hover:not(.active) { border-color: var(--text-muted); }
+
+  /* ── Progress Bar ── */
+  .progress-area {
+    display: flex; align-items: center; gap: 14px;
+    padding: 28px 0 8px;
+  }
+  .progress-track {
+    flex: 1; height: 4px; background: var(--surface2);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-size: 12px; color: var(--text-muted); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Question Card ── */
+  .question-card {
+    animation: fadeUp 0.35s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .q-category {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; padding: 5px 14px;
+    border-radius: 20px;
+  }
+  .q-streak {
+    font-size: 13px; color: var(--amber);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .q-text {
+    font-family: 'Fraunces', serif; font-size: 23px;
+    line-height: 1.45; font-weight: 400;
+    margin-bottom: 28px; color: var(--text);
+  }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    width: 100%; padding: 18px 20px;
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 12px; text-align: left;
+    font-size: 15px; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 14px;
+    position: relative; overflow: hidden;
+  }
+  .option-btn:hover:not(.answered) {
+    border-color: var(--accent); background: var(--surface2);
+    transform: translateX(4px);
+  }
+  .option-btn .letter {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--surface2); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .option-btn:hover:not(.answered) .letter {
+    background: var(--accent); color: var(--bg);
+  }
+  .option-btn.correct {
+    border-color: var(--green); background: var(--green-bg);
+    color: var(--green);
+  }
+  .option-btn.correct .letter {
+    background: var(--green); color: var(--bg);
+  }
+  .option-btn.wrong {
+    border-color: var(--red); background: var(--red-bg);
+    color: var(--red);
+  }
+  .option-btn.wrong .letter {
+    background: var(--red); color: var(--bg);
+  }
+  .option-btn.dimmed {
+    opacity: 0.35; pointer-events: none;
+  }
+  .option-btn.answered { cursor: default; }
+
+  /* ── Explanation ── */
+  .explanation {
+    margin-top: 20px; padding: 18px 22px;
+    background: var(--surface); border-radius: 12px;
+    border-left: 3px solid var(--accent);
+    animation: fadeUp 0.3s ease;
+  }
+  .explanation p {
+    font-size: 14px; color: var(--text-dim);
+    line-height: 1.7; margin-bottom: 16px;
+  }
+  .next-btn {
+    padding: 12px 28px; background: var(--accent);
+    color: var(--bg); border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .next-btn:hover { background: #e0b44e; }
+
+  /* ── Results ── */
+  .results {
+    text-align: center; padding: 48px 0;
+    animation: fadeUp 0.5s ease;
+  }
+  .results-emoji { font-size: 72; margin-bottom: 20px; }
+  .results h2 {
+    font-family: 'Fraunces', serif; font-size: 36px;
+    font-weight: 400; margin-bottom: 8px;
+  }
+  .results-sub {
+    font-size: 16px; color: var(--text-dim); margin-bottom: 36px;
+  }
+  .results-bar {
+    width: 100%; max-width: 320px; height: 10px;
+    background: var(--surface2); border-radius: 5px;
+    margin: 0 auto 12px; overflow: hidden;
+  }
+  .results-bar-fill {
+    height: 100%; border-radius: 5px;
+    transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .results-pct {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 40px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    padding: 16px 12px; background: var(--surface);
+    border-radius: 10px; border: 1px solid var(--border);
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif; font-size: 28px;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); }
+
+  .restart-btn {
+    padding: 16px 36px; background: var(--accent);
+    color: var(--bg); border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { background: #e0b44e; transform: translateY(-1px); }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; padding: 40px 0 20px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .footer a { color: var(--accent-dim); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .header h1 { font-size: 28px; }
+    .q-text { font-size: 20px; }
+    .category-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-card { padding: 12px 8px; }
+    .stat-value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const QUESTIONS = [
+  // Grundbegriffe
+  {
+    category: "Grundbegriffe", difficulty: 1,
+    question: "Wie viel Energie verbraucht Deutschland jährlich ungefähr?",
+    options: ["240 TWh", "2.400 TWh", "24.000 TWh", "160.000 TWh"],
+    correct: 1,
+    explanation: "Deutschland verbraucht ca. 2.400 TWh pro Jahr. Die gesamte Welt braucht ungefähr 160.000 TWh."
+  },
+  {
+    category: "Grundbegriffe", difficulty: 1,
+    question: "Was ist der Unterschied zwischen Energie und Elektrizität?",
+    options: [
+      "Es gibt keinen – beides ist dasselbe",
+      "Energie umfasst alle Formen (Wärme, Öl, Strom etc.), Elektrizität ist nur eine davon",
+      "Elektrizität ist der Oberbegriff für alle Energieformen",
+      "Energie wird in Joule gemessen, Elektrizität in Watt"
+    ],
+    correct: 1,
+    explanation: "Energie ist ≠ Elektrizität. Energie umfasst alle Formen – Wärme, Öl, Treibstoffe, Wasserstoff etc. Elektrizität ist nur eine Teilmenge."
+  },
+  {
+    category: "Grundbegriffe", difficulty: 2,
+    question: "Was beschreibt das Energie-Trilemma?",
+    options: [
+      "Sonne, Wind und Wasser",
+      "Versorgungssicherheit, Wirtschaftlichkeit, Nachhaltigkeit",
+      "Erzeugung, Transport, Verbrauch",
+      "Kohle, Gas, Kernenergie"
+    ],
+    correct: 1,
+    explanation: "Das Energie-Trilemma balanciert Versorgungssicherheit, Wirtschaftlichkeit und Nachhaltigkeit. Oft wird noch ein sozialer Aspekt ergänzt (Energieviereck)."
+  },
+  {
+    category: "Grundbegriffe", difficulty: 2,
+    question: "Was bestimmt das Merit-Order-Prinzip?",
+    options: [
+      "Die maximale Leistung eines Kraftwerks",
+      "In welcher Reihenfolge Kraftwerke ans Netz gehen – günstigste zuerst",
+      "Den CO₂-Ausstoß pro Kraftwerk",
+      "Die Lebensdauer von Energieanlagen"
+    ],
+    correct: 1,
+    explanation: "Das Merit-Order-Prinzip bestimmt, dass die günstigsten Kraftwerke zuerst ans Netz gehen. Alle Produzenten werden nach dem teuersten angebotenen Strompreis vergütet."
+  },
+  {
+    category: "Grundbegriffe", difficulty: 3,
+    question: "Welche Faktoren beschreibt die Kaya-Identität?",
+    options: [
+      "Windstärke × Sonnenstunden × Niederschlag × Temperatur",
+      "Carbon Intensity × Energy Intensity × GDP per capita × Population",
+      "Leistung × Wirkungsgrad × Volllaststunden × Kapazität",
+      "Import × Export × Produktion × Verbrauch"
+    ],
+    correct: 1,
+    explanation: "Die Kaya-Identität: GHG = (GHG/PEC) × (PEC/GDP) × (GDP/pop) × pop. Sie zeigt, dass mindestens ein Faktor null sein muss, um Null-Emissionen zu erreichen."
+  },
+
+  // Technologien
+  {
+    category: "Technologien", difficulty: 1,
+    question: "Welche Leistung hat ein Standard-PV-Modul auf einem Hausdach?",
+    options: ["ca. 40 W", "ca. 400 W", "ca. 4.000 W", "ca. 40.000 W"],
+    correct: 1,
+    explanation: "Ein Standardmodul auf einem Haus hat eine Leistung von ca. 400 W."
+  },
+  {
+    category: "Technologien", difficulty: 1,
+    question: "Wie hoch ist der Wirkungsgrad eines Elektromotors im Vergleich zum Verbrenner?",
+    options: [">60% vs. ~20%", "~40% vs. ~30%", "~80% vs. ~60%", "~50% vs. ~50%"],
+    correct: 0,
+    explanation: "Elektromotoren haben einen Wirkungsgrad von >60%, Verbrennermotoren nur ~20%. Ein großer Teil der Energie geht als Abwärme verloren."
+  },
+  {
+    category: "Technologien", difficulty: 2,
+    question: "Welche Leistung hat eine typische Offshore-Windturbine?",
+    options: ["bis zu 1 MW", "bis zu 5 MW", "bis zu 15 MW", "bis zu 50 MW"],
+    correct: 2,
+    explanation: "Windturbinen auf See erreichen bis zu 15 MW Leistung, an Land bis zu 5 MW."
+  },
+  {
+    category: "Technologien", difficulty: 2,
+    question: "Welche Energiequellen gelten als STEUERBAR/FLEXIBEL?",
+    options: [
+      "Solar und Wind",
+      "Gaskraftwerke, Biomasse, Kohle",
+      "Atomkraftwerke und Geothermie",
+      "Alle erneuerbaren Energien"
+    ],
+    correct: 1,
+    explanation: "Steuerbar/flexibel sind Gaskraftwerke, Biomasse und Kohle. Solar und Wind sind variabel, Atomkraftwerke nur leicht anpassbar."
+  },
+  {
+    category: "Technologien", difficulty: 3,
+    question: "Wie viel Batteriespeicherkapazität muss in Deutschland bis 2030 hinzukommen?",
+    options: ["5–10 GW", "20–30 GW", "50–100 GW", "200–300 GW"],
+    correct: 2,
+    explanation: "Bis 2030 müssen 50–100 GW Batteriespeicherkapazität hinzukommen. Derzeit gibt es rund 12 GW Lithium-Ionen-Batteriespeicher."
+  },
+
+  // Politik
+  {
+    category: "Politik", difficulty: 1,
+    question: "Wann stieg Deutschland aus der Kernenergie aus?",
+    options: ["2019", "2021", "2023", "2025"],
+    correct: 2,
+    explanation: "Der Ausstieg aus der Kernenergie gelang im Frühjahr 2023."
+  },
+  {
+    category: "Politik", difficulty: 2,
+    question: "Bis wann soll laut KSG Netto-Treibhausgas-Neutralität erreicht werden?",
+    options: ["2030", "2038", "2045", "2050"],
+    correct: 2,
+    explanation: "Das Klimaschutzgesetz (KSG) legt 2045 als Ziel für Netto-THG-Neutralität fest."
+  },
+  {
+    category: "Politik", difficulty: 2,
+    question: "Wie viel Prozent des Bruttostroms sollen bis 2030 aus Erneuerbaren kommen?",
+    options: ["50%", "65%", "80%", "100%"],
+    correct: 2,
+    explanation: "Das EEG legt fest, dass bis 2030 80% des Bruttostroms aus Erneuerbaren Energien erzeugt werden sollen. 2025 liegt der Anteil bei etwa 63%."
+  },
+  {
+    category: "Politik", difficulty: 2,
+    question: "Was regelt das Wärmeplanungsgesetz (WPG)?",
+    options: [
+      "Einspeisevergütungen für Solaranlagen",
+      "Kommunen müssen bis 2026/2028 eine Wärmeplanung vorlegen",
+      "Den schrittweisen Kohleausstieg",
+      "Die Beschleunigung von Windkraftgenehmigungen"
+    ],
+    correct: 1,
+    explanation: "Das WPG verpflichtet alle Kommunen bis spätestens 2026 (>100.000 Einwohner:innen) bzw. 2028 (übrige) eine kommunale Wärmeplanung vorzulegen."
+  },
+  {
+    category: "Politik", difficulty: 3,
+    question: "Wie hoch schätzt der BDEW den privatwirtschaftlichen Investitionsbedarf für die Energiewende?",
+    options: ["120 Milliarden Euro", "400 Milliarden Euro", "1,2 Billionen Euro", "3 Billionen Euro"],
+    correct: 2,
+    explanation: "Der BDEW schätzt den privatwirtschaftlichen Bedarf auf rund 1,2 Billionen Euro, vor allem für Netze und Erzeugung."
+  },
+
+  // Wärmewende
+  {
+    category: "Wärmewende", difficulty: 1,
+    question: "Wie viel des globalen Gesamtenergieverbrauchs entfiel 2022 auf Wärme?",
+    options: ["Etwa ein Viertel", "Etwa ein Drittel", "Mehr als die Hälfte", "Etwa 70%"],
+    correct: 2,
+    explanation: "2022 belief sich der globale Anteil der Wärme am Gesamtenergieverbrauch auf mehr als die Hälfte."
+  },
+  {
+    category: "Wärmewende", difficulty: 2,
+    question: "Um wie viel °C steigt die Temperatur in der Erdkruste in Deutschland pro 100 m?",
+    options: ["1 °C", "3 °C", "5 °C", "10 °C"],
+    correct: 1,
+    explanation: "In Deutschland steigt die Temperatur in der Erdkruste durchschnittlich um 3 °C pro 100 Meter."
+  },
+  {
+    category: "Wärmewende", difficulty: 2,
+    question: "Was ist Power-to-Heat?",
+    options: [
+      "Stromerzeugung aus Abwärme",
+      "Umwandlung von überschüssigem Strom in Wärme",
+      "Erdgasverbrennung zur Wärmeerzeugung",
+      "Transport von Wärme über Fernwärmenetze"
+    ],
+    correct: 1,
+    explanation: "Power-to-Heat bezeichnet die Umwandlung von elektrischer Energie in Wärme, z.B. durch Wärmepumpen. So kann überschüssiger EE-Strom genutzt werden."
+  },
+  {
+    category: "Wärmewende", difficulty: 3,
+    question: "Was bedeutet 'Serielles Sanieren'?",
+    options: [
+      "Gebäude werden nacheinander, Straße für Straße, saniert",
+      "Sanierung mit vorgefertigten Fassaden-/Dachelementen für schnellere Montage",
+      "Sanierung nur der serienmäßig verbauten Bauteile",
+      "Digitale Planung der Sanierung in Serie"
+    ],
+    correct: 1,
+    explanation: "Serielles Sanieren nutzt vorgefertigte Fassaden- und Dachelemente mit hohem Vorfertigungsgrad, was den zeitlichen Aufwand vor Ort deutlich reduziert."
+  },
+
+  // Rohstoffe
+  {
+    category: "Rohstoffe", difficulty: 1,
+    question: "Zu wie viel Prozent kann Kupfer ohne Qualitätsverlust recycelt werden?",
+    options: ["50%", "75%", "90%", "100%"],
+    correct: 3,
+    explanation: "Kupfer kann zu 100% ohne Qualitätsverlust recycelt werden. ~50% des in Europa genutzten Kupfers stammt aus Recycling."
+  },
+  {
+    category: "Rohstoffe", difficulty: 2,
+    question: "Wie viel Prozent der weltweiten seltenen Erden förderte China 2022?",
+    options: ["~30%", "~50%", "~70%", "~90%"],
+    correct: 2,
+    explanation: "China förderte 2022 ungefähr 70% aller seltenen Erden und verarbeitet 85% der gesamten Seltenen Erden weiter."
+  },
+  {
+    category: "Rohstoffe", difficulty: 2,
+    question: "Was ist ein 'kritischer Rohstoff' laut EU-Definition?",
+    options: [
+      "Jeder Rohstoff, der unter Tage abgebaut wird",
+      "Rohstoffe mit hoher wirtschaftlicher Bedeutung und hohem Versorgungsrisiko",
+      "Rohstoffe, deren Preis über 100€/kg liegt",
+      "Radioaktive Materialien für die Kernenergie"
+    ],
+    correct: 1,
+    explanation: "Kritische Rohstoffe haben große wirtschaftliche Bedeutung und ein hohes Versorgungsrisiko durch konzentrierte Bezugsquellen. Die EU listet 34 solcher Rohstoffe."
+  },
+  {
+    category: "Rohstoffe", difficulty: 3,
+    question: "Was versteht man unter Parakolonialität im Kontext der Energiewende?",
+    options: [
+      "Gleichberechtigte Handelspartnerschaft zwischen Staaten",
+      "Nutzung postkolonialer Strukturen durch Staaten, um andere Länder auszubeuten",
+      "Kolonialer Ressourcenabbau im 19. Jahrhundert",
+      "Militärische Kontrolle über Energierouten"
+    ],
+    correct: 1,
+    explanation: "Parakolonialität bedeutet, dass Staaten postkoloniale Strukturen zu ihrem Vorteil nutzen, oft indem sie Machtmechanismen früherer Kolonialmächte übernehmen."
+  },
+
+  // Narrative
+  {
+    category: "Narrative", difficulty: 1,
+    question: "Welche Gefühle eignen sich NICHT gut für die Klimakommunikation?",
+    options: ["Neugier und Freude", "Angst und Katastrophenszenarien", "Kollektive Wut", "Entspannung"],
+    correct: 1,
+    explanation: "Angst- und Katastrophenszenarien sollten vermieden werden, da sie zu lähmender Ohnmacht führen können. Besser: kollektive Wut, Freude, Neugier."
+  },
+  {
+    category: "Narrative", difficulty: 2,
+    question: "Wie veränderte sich die Strategie fossiler Unternehmen über die Zeit?",
+    options: [
+      "Von Investition in EE zu Desinvestition",
+      "Von Klimawandelleugnung (denial) zu Verzögerung (delay)",
+      "Von Transparenz zu Geheimhaltung",
+      "Von nationalem zu internationalem Fokus"
+    ],
+    correct: 1,
+    explanation: "Die Strategie wandelte sich von Klimawandelleugnung hin zu Verzögerung durch Verantwortungsverschiebung, Verschleierung und Greenwashing."
+  },
+  {
+    category: "Narrative", difficulty: 3,
+    question: "Was motiviert Menschen laut Forschung MEHR als reine Fakten?",
+    options: [
+      "Noch mehr Daten und Statistiken",
+      "Selbstwirksamkeit und soziale Normen",
+      "Finanzielle Strafen und Verbote",
+      "Prominente als Vorbilder"
+    ],
+    correct: 1,
+    explanation: "Mehr Wissen führt nicht automatisch zu Handlung. Wichtiger sind Selbstwirksamkeit und soziale Normen – also was die eigenen Bezugspersonen darüber denken."
+  },
+
+  // Suffizienz
+  {
+    category: "Suffizienz", difficulty: 1,
+    question: "Was bedeutet Suffizienz?",
+    options: [
+      "Effizienzsteigerung durch neue Technologien",
+      "Ressourcenverbrauch durch bewusstes Handeln reduzieren",
+      "Vollständiges Recycling aller Materialien",
+      "Maximale Ausnutzung aller Energiequellen"
+    ],
+    correct: 1,
+    explanation: "Suffizienz bedeutet, den Ressourcenverbrauch durch bewusstes Handeln zu reduzieren – mit weniger auszukommen, ohne die Lebensqualität zu mindern."
+  },
+  {
+    category: "Suffizienz", difficulty: 2,
+    question: "Was bedeutet 'Post-Growth'?",
+    options: [
+      "Aktive Schrumpfung des BIP",
+      "BIP-Wachstum nicht als Ziel verfolgen",
+      "BIP als Indikator komplett ignorieren",
+      "Konsum auf ein Minimum reduzieren"
+    ],
+    correct: 1,
+    explanation: "Post-Growth meint Gesellschaften, die BIP-Wachstum nicht als Ziel verfolgen und Bedürfnisse ohne Wachstum decken können – im Rahmen planetarer Grenzen."
+  },
+  {
+    category: "Suffizienz", difficulty: 3,
+    question: "Welche vier Dimensionen der Suffizienz werden unterschieden?",
+    options: [
+      "Dimensional, Cooperative, Usage, Organisational",
+      "Individual, Kollektiv, Staatlich, Global",
+      "Energie, Wasser, Material, Fläche",
+      "Produktion, Konsum, Transport, Entsorgung"
+    ],
+    correct: 0,
+    explanation: "Die vier Dimensionen: Dimensional (richtige Größe), Cooperative (Teilen), Usage (weniger Nutzen), Organisational (angepasste Infrastruktur)."
+  },
+];
+
+const CATEGORIES = [
+  { name: "Grundbegriffe", color: "#4ade80", bg: "#132a1c" },
+  { name: "Technologien", color: "#a78bfa", bg: "#1e1533" },
+  { name: "Politik", color: "#f87171", bg: "#2a1313" },
+  { name: "Wärmewende", color: "#fbbf24", bg: "#2a2010" },
+  { name: "Rohstoffe", color: "#60a5fa", bg: "#0f1f33" },
+  { name: "Narrative", color: "#c084fc", bg: "#200f33" },
+  { name: "Suffizienz", color: "#34d399", bg: "#0f2a20" },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let state = {
+  screen: 'start', // start, playing, results
+  difficulty: 2, // 1=leicht, 2=mittel, 3=schwer
+  questions: [],
+  current: 0,
+  selected: null,
+  score: 0,
+  streak: 0,
+  maxStreak: 0,
+  showExplanation: false,
+  animating: false,
+};
+
+function getQuestionCount() {
+  return state.difficulty === 1 ? 8 : state.difficulty === 2 ? 10 : 12;
+}
+
+function startGame() {
+  const count = getQuestionCount();
+  const maxDiff = state.difficulty;
+  const filtered = QUESTIONS.filter(q => q.difficulty <= maxDiff);
+  const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, count);
+  state = {
+    ...state, screen: 'playing', questions: shuffled,
+    current: 0, selected: null, score: 0, streak: 0, maxStreak: 0,
+    showExplanation: false, animating: false,
+  };
+  render();
+}
+
+function selectOption(idx) {
+  if (state.selected !== null || state.animating) return;
+  state.selected = idx;
+  state.showExplanation = true;
+  const q = state.questions[state.current];
+  if (idx === q.correct) {
+    state.score++;
+    state.streak++;
+    state.maxStreak = Math.max(state.maxStreak, state.streak);
+  } else {
+    state.streak = 0;
+  }
+  render();
+}
+
+function nextQuestion() {
+  if (state.current + 1 >= state.questions.length) {
+    state.screen = 'results';
+  } else {
+    state.animating = true;
+    state.current++;
+    state.selected = null;
+    state.showExplanation = false;
+    state.animating = false;
+  }
+  render();
+}
+
+function setDifficulty(d) {
+  state.difficulty = d;
+  render();
+}
+
+function restart() {
+  state.screen = 'start';
+  render();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+function getCatStyle(name) {
+  const cat = CATEGORIES.find(c => c.name === name);
+  return cat ? `background:${cat.bg}; color:${cat.color}; border: 1px solid ${cat.color}30;` : '';
+}
+
+function getCatColor(name) {
+  const cat = CATEGORIES.find(c => c.name === name);
+  return cat ? cat.color : '#888';
+}
+
+function render() {
+  const app = document.getElementById('app');
+
+  if (state.screen === 'start') {
+    app.innerHTML = `
+      <div class="header">
+        <div class="header-label">Interaktives Quiz</div>
+        <h1>Energiewende<br><em>Wissenscheck</em></h1>
+        <p class="header-sub">Teste dein Wissen zu Technologien, Politik,<br>Wärmewende, Rohstoffen und mehr.</p>
+      </div>
+      <div class="start-screen">
+        <div class="category-grid">
+          ${CATEGORIES.map(c => `
+            <div class="cat-chip">
+              <span class="dot" style="background:${c.color}"></span>
+              ${c.name}
+            </div>
+          `).join('')}
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:16px; text-transform:uppercase; letter-spacing:1px;">
+          Schwierigkeit
+        </div>
+        <div class="difficulty-select">
+          <button class="diff-btn ${state.difficulty===1?'active':''}" onclick="setDifficulty(1)">Einsteiger</button>
+          <button class="diff-btn ${state.difficulty===2?'active':''}" onclick="setDifficulty(2)">Fortgeschritten</button>
+          <button class="diff-btn ${state.difficulty===3?'active':''}" onclick="setDifficulty(3)">Experte</button>
+        </div>
+        <div style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:24px;">
+          ${getQuestionCount()} Fragen · ${state.difficulty===1?'Grundwissen':state.difficulty===2?'inkl. Vertiefung':'alle Schwierigkeitsgrade'}
+        </div>
+        <button class="start-btn" onclick="startGame()">Quiz starten →</button>
+      </div>
+      <div class="footer">
+        Basierend auf dem Spickzettel Energiewende
+      </div>
+    `;
+    return;
+  }
+
+  if (state.screen === 'results') {
+    const total = state.questions.length;
+    const pct = Math.round((state.score / total) * 100);
+    const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🌟' : pct >= 50 ? '👍' : pct >= 30 ? '📖' : '💪';
+    const msg = pct >= 90 ? 'Energiewende-Profi!'
+      : pct >= 70 ? 'Sehr solides Wissen!'
+      : pct >= 50 ? 'Gute Grundlagen – weiter so!'
+      : pct >= 30 ? 'Da geht noch was – bleib dran!'
+      : 'Jeder Anfang ist schwer – nochmal?';
+    const barColor = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+
+    // count per category
+    const catResults = {};
+    state.questions.forEach((q, i) => {
+      if (!catResults[q.category]) catResults[q.category] = { total: 0, correct: 0 };
+      catResults[q.category].total++;
+    });
+    // need to track which were correct - we'll reconstruct from state
+    // Actually we didn't track per-question results. Let's show overall stats instead.
+
+    app.innerHTML = `
+      <div class="header">
+        <div class="header-label">Ergebnis</div>
+        <h1>Energiewende<br><em>Wissenscheck</em></h1>
+      </div>
+      <div class="results">
+        <div class="results-emoji">${emoji}</div>
+        <h2>${state.score} von ${total}</h2>
+        <p class="results-sub">${msg}</p>
+        <div class="results-bar">
+          <div class="results-bar-fill" style="width:${pct}%; background:${barColor};" id="results-bar-fill"></div>
+        </div>
+        <p class="results-pct">${pct}% richtig</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--green);">${state.score}</div>
+            <div class="stat-label">Richtig</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--red);">${total - state.score}</div>
+            <div class="stat-label">Falsch</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--amber);">${state.maxStreak}</div>
+            <div class="stat-label">Beste Serie</div>
+          </div>
+        </div>
+        <button class="restart-btn" onclick="restart()">Nochmal spielen</button>
+      </div>
+      <div class="footer">
+        Basierend auf dem Spickzettel Energiewende
+      </div>
+    `;
+
+    // Animate bar
+    setTimeout(() => {
+      const bar = document.getElementById('results-bar-fill');
+      if (bar) bar.style.width = pct + '%';
+    }, 50);
+    return;
+  }
+
+  // ── Playing screen ──
+  const q = state.questions[state.current];
+  const total = state.questions.length;
+  const progressPct = ((state.current) / total) * 100;
+
+  let optionsHtml = q.options.map((opt, i) => {
+    const letter = String.fromCharCode(65 + i);
+    let classes = 'option-btn';
+    if (state.selected !== null) {
+      classes += ' answered';
+      if (i === q.correct) classes += ' correct';
+      else if (i === state.selected) classes += ' wrong';
+      else classes += ' dimmed';
+    }
+    return `<button class="${classes}" onclick="selectOption(${i})">
+      <span class="letter">${letter}</span>
+      <span>${opt}</span>
+    </button>`;
+  }).join('');
+
+  let explanationHtml = '';
+  if (state.showExplanation) {
+    explanationHtml = `
+      <div class="explanation">
+        <p>${q.explanation}</p>
+        <button class="next-btn" onclick="nextQuestion()">
+          ${state.current + 1 >= total ? 'Ergebnis anzeigen →' : 'Nächste Frage →'}
+        </button>
+      </div>
+    `;
+  }
+
+  app.innerHTML = `
+    <div class="progress-area">
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${progressPct}%"></div>
+      </div>
+      <span class="progress-text">${state.current + 1}/${total}</span>
+    </div>
+    <div class="question-card" key="${state.current}">
+      <div class="q-meta">
+        <span class="q-category" style="${getCatStyle(q.category)}">${q.category}</span>
+        ${state.streak >= 2 ? `<span class="q-streak">🔥 ${state.streak}er Serie</span>` : ''}
+      </div>
+      <h2 class="q-text">${q.question}</h2>
+      <div class="options">${optionsHtml}</div>
+      ${explanationHtml}
+    </div>
+  `;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
